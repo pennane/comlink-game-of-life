@@ -27,19 +27,36 @@
 
     /** @type {HTMLCanvasElement}*/
     const canvas = document.getElementById('canvas')
-    const [width, height] = [window.innerWidth, window.innerHeight]
-    canvas.width = width
-    canvas.height = height
     const ctx = canvas.getContext('2d', { willReadFrequently: true })
 
-    const worker = new Worker('worker.js')
-    const { next_frame, initialize } = Comlink.wrap(worker)
+    function update_canvas_size() {
+      const [width, height] = [window.innerWidth, window.innerHeight]
+      canvas.width = width
+      canvas.height = height
+    }
 
+    function on_resize() {
+      update_canvas_size()
+      init_worker(canvas.width, canvas.height)
+    }
+
+    const worker = new Worker('worker.js')
+    const { next_frame, init_worker } = Comlink.wrap(worker)
+
+    const target_fps = 60
+    const frame_time = 1000 / target_fps
+
+    let lastTime = 0
     async function animate(time) {
-      ctx.putImageData(await next_frame(), 0, 0)
+      if (time - lastTime >= frame_time) {
+        lastTime = time
+        ctx.putImageData(await next_frame(), 1, 1) // 1, 1 due to one px padding around the data
+      }
       requestAnimationFrame(animate)
     }
 
-    initialize(width, height).then(animate)
+    update_canvas_size()
+    init_worker(canvas.width, canvas.height).then(animate)
+    window.addEventListener('resize', on_resize)
   </script>
 </html>

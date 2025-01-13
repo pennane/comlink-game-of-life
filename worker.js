@@ -1,65 +1,64 @@
 importScripts("https://unpkg.com/comlink/dist/umd/comlink.js");
 
-let width, height, rowLength, a, b;
+let data_size, image_a, image_b, neighbor_offsets;
 
-function initialize(w, h) {
-  const ad = new Uint8ClampedArray(w * h * 4);
-  const bd = new Uint8ClampedArray(w * h * 4);
+function init_worker(w, h) {
+  data_size = w * h * 4
 
-  for (let i = 0; i < ad.length; i += 4) {
-    const cell = Math.random() > 0.95 ? 255 : 0
-    const opacity = 255
-    ad[i + 3] = opacity; bd[i + 3] = opacity;
-    ad[i] = cell; bd[i] = cell;
-  }
-  a = new ImageData(ad, w, h); b = new ImageData(bd, w, h);
-  width = w; height = h; rowLength = w * 4;
-  offsets = [
-    -rowLength - 4,  // up-left
-    -rowLength,      // up
-    -rowLength + 4,  // up-right
+  const row_size = w * 4;
+
+  neighbor_offsets = [
+    -row_size - 4,  // up-left
+    -row_size,      // up
+    -row_size + 4,  // up-right
     -4,              // left
     +4,              // right
-    rowLength - 4,   // down-left
-    rowLength,       // down
-    rowLength + 4,   // down-right
+    row_size - 4,   // down-left
+    row_size,       // down
+    row_size + 4,   // down-right
   ];
-}
 
-function valid_offset(index, offset, rowLength, totalLength) {
-  const target = index + offset;
+  const buffer_a = new Uint8ClampedArray(data_size);
+  const buffer_b = new Uint8ClampedArray(data_size);
 
-  if (target < 0 || target >= totalLength) return false;
-  if (offset === -4 && (index % rowLength) === 0) return false;
-  if (offset === 4 && (index % rowLength) === (rowLength - 4)) return false;
+  const opacity = 255
+  for (let i = 0; i < data_size; i += 4) {
+    const cell = Math.random() > 0.9 ? 255 : 0
+    buffer_a[i + 3] = opacity;
+    buffer_b[i + 3] = opacity;
+    buffer_a[i] = cell;
+    buffer_b[i] = cell;
+  }
 
-  return true;
+  image_a = new ImageData(buffer_a, w, h);
+  image_b = new ImageData(buffer_b, w, h);
 }
 
 function next_frame() {
-  let temp = a; a = b; b = temp;
-  const now = a.data;
-  const next = b.data;
-  for (let i = 0; i < now.length; i += 4) {
+  let temp = image_a; image_a = image_b; image_b = temp;
+
+  const buffer_now = image_a.data;
+  const buffer_next = image_b.data;
+
+  for (let i = 4; i < data_size - 4; i += 4) {
     let neighbors = 0;
 
-    // TODO: precompute valid offsets for each index
-    for (const offset of offsets) {
-      if (valid_offset(i, offset, rowLength, now.length) && now[i + offset]) {
+    for (const offset of neighbor_offsets) {
+      if (buffer_now[i + offset]) {
         neighbors += 1;
       }
     }
 
-    const alive = now[i];
-    let cell = 0;
+    let state_now = buffer_now[i];
+    let state_next = 0;
 
-    if (neighbors === 3) cell = 255;
-    else if (neighbors === 2) cell = alive;
+    if (neighbors === 3) state_next = 255;
+    else if (neighbors === 2) state_next = state_now;
 
-    next[i] = cell;
-    next[i + 3] = 255;
+    buffer_next[i] = state_next;
+    buffer_next[i + 3] = 255;
   }
-  return b
+  return image_b
 }
 
-Comlink.expose({ next_frame, initialize });
+Comlink.expose({ next_frame, init_worker });
