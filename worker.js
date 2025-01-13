@@ -23,11 +23,11 @@ function init_worker(w, h) {
 
   const opacity = 255
   for (let i = 0; i < data_size; i += 4) {
-    const cell = Math.random() > 0.9 ? 255 : 0
+    const state = Math.random() > 0.9 ? 255 : 0
     buffer_a[i + 3] = opacity;
     buffer_b[i + 3] = opacity;
-    buffer_a[i] = cell;
-    buffer_b[i] = cell;
+    buffer_a[i] = state;
+    buffer_b[i] = state;
   }
 
   image_a = new ImageData(buffer_a, w, h);
