@@ -46,10 +46,10 @@
     const target_fps = 60
     const frame_time = 1000 / target_fps
 
-    let lastTime = 0
+    let last_time = 0
     async function animate(time) {
-      if (time - lastTime >= frame_time) {
-        lastTime = time
+      if (time - last_time >= frame_time) {
+        last_time = time
         ctx.putImageData(await next_frame(), 1, 1) // 1, 1 due to one px padding around the data
       }
       requestAnimationFrame(animate)
