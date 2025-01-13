@@ -6,3 +6,5 @@ maybe
 
 is it faster than without comlink / workers?
 dunno
+
+but it feels right
