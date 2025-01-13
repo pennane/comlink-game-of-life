@@ -23,7 +23,7 @@ function init_worker(w, h) {
 
   const opacity = 255
   for (let i = 0; i < data_size; i += 4) {
-    const state = Math.random() > 0.9 ? 255 : 0
+    const state = Math.random() > 0.95 ? 255 : 0
     buffer_now[i + 3] = opacity;
     buffer_next[i + 3] = opacity;
     buffer_now[i] = state;
