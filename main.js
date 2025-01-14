@@ -1,11 +1,9 @@
-import * as Comlink from 'https://unpkg.com/comlink/dist/esm/comlink.mjs'
-
 /** @type {HTMLCanvasElement}*/
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d', { willReadFrequently: true })
 
-canvas.width = Math.floor(window.innerWidth)
-canvas.height = Math.floor(window.innerHeight)
+canvas.width = Math.floor(window.innerWidth * .75)
+canvas.height = Math.floor(window.innerHeight * .75)
 
 const image_data = ctx.getImageData(0, 0, canvas.width, canvas.height)
 
