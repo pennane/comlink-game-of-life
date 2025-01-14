@@ -1,4 +1,4 @@
-importScripts("dist/umd/comlink.js")
+importScripts("./dist/umd/comlink.js")
 
 let frame_view, data_size
 let neighbor_indices, neighbor_view, neighbor_delta
