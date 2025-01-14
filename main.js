@@ -37,4 +37,4 @@ async function animate(time) {
 }
 
 
-init_worker(canvas.width, canvas.height, 0.8).then(animate)
+init_worker(canvas.width, canvas.height, 0.9).then(animate)
