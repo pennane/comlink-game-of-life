@@ -8,3 +8,6 @@ is it faster than without comlink / workers?
 dunno
 
 but it feels right
+
+
+maybe could use https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas
