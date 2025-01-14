@@ -16,5 +16,11 @@ async function measure_performance(target_frames, frame_size) {
   return end - start
 }
 
-console.log(await measure_performance(100, 1000, 1000))
-// 100 frames -> around 3.3 s
+console.log(await measure_performance(100, 1000))
+//  ImageData                         3.3 s
+//  Uint8ClampedArray                 3.4 s
+//  ArrayBuffer                       3.5 s 
+//  SharedArrayBuffer                 2.9 s 
+//  ArrayBuffer only transport        0.5 s
+//  SharedArrayBuffer only transport  10 ms
+//  After all the changes             1.7 s

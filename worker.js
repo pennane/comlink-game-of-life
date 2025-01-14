@@ -1,64 +1,81 @@
-importScripts("https://unpkg.com/comlink/dist/umd/comlink.js");
+importScripts("https://unpkg.com/comlink/dist/umd/comlink.js")
 
-let data_size, image_now, image_next, neighbor_offsets;
+let frame_view, data_size
+let neighbor_indices, neighbor_view, neighbor_delta
 
-function init_worker(w, h) {
-  data_size = w * h * 4
+function init_worker(w, h, p) {
+  data_size = w * h
 
-  const row_size = w * 4;
+  const buffer = crossOriginIsolated
+    ? new SharedArrayBuffer(data_size)
+    : new ArrayBuffer(data_size)
 
-  neighbor_offsets = [
-    -row_size - 4,  // up-left
-    -row_size,      // up
-    -row_size + 4,  // up-right
-    -4,              // left
-    +4,              // right
-    row_size - 4,   // down-left
-    row_size,       // down
-    row_size + 4,   // down-right
-  ];
+  frame_view = new Uint8ClampedArray(buffer)
 
-  const buffer_now = new Uint8ClampedArray(data_size);
-  const buffer_next = new Uint8ClampedArray(data_size);
-
-  const opacity = 255
-  for (let i = 0; i < data_size; i += 4) {
-    const state = Math.random() > 0.93 ? 255 : 0
-    buffer_now[i + 3] = opacity;
-    buffer_next[i + 3] = opacity;
-    buffer_now[i] = state;
-    buffer_next[i] = state;
+  for (let i = 0; i < data_size; i++) {
+    const state = Math.random() > p ? 255 : 0
+    frame_view[i] = state
   }
 
-  image_now = new ImageData(buffer_now, w, h);
-  image_next = new ImageData(buffer_next, w, h);
+  neighbor_indices = new Array(data_size)
+  neighbor_view = new Uint8ClampedArray(data_size)
+  neighbor_delta = new Int8Array(data_size)
+
+  for (let x = 0; x < w; x++) {
+    for (let y = 0; y < h; y++) {
+      const i = y * w + x
+      const neighbors = []
+
+      for (let dx = -1; dx < 2; dx++) {
+        for (let dy = -1; dy < 2; dy++) {
+          if (dx === 0 && dy === 0) continue
+          const ox = x + dx
+          if (ox === 0 || ox === w) continue
+          const oy = y + dy
+          if (oy === 0 || oy === h) continue
+          neighbors.push(oy * w + ox)
+        }
+      }
+      neighbor_indices[i] = neighbors
+    }
+  }
+
+  for (let i = 0; i < data_size; i++) {
+    let neighbors = 0
+    for (const offset of neighbor_indices[i]) {
+      if (frame_view[offset]) neighbors += 1
+    }
+    neighbor_view[i] = neighbors
+  }
 }
 
 function next_frame() {
-  let temp = image_now; image_now = image_next; image_next = temp;
+  neighbor_delta.fill(0)
 
-  const buffer_now = image_now.data;
-  const buffer_next = image_next.data;
-
-  for (let i = 4; i < data_size - 4; i += 4) {
-    let neighbors = 0;
-
-    for (const offset of neighbor_offsets) {
-      if (buffer_now[i + offset]) {
-        neighbors += 1;
-      }
+  for (let i = 0; i < data_size; i++) {
+    let state_now = frame_view[i]
+    let neighbors = neighbor_view[i]
+    if (!state_now && !neighbors) {
+      continue
     }
 
-    let state_now = buffer_now[i];
-    let state_next = 0;
+    let state_next = 0
+    if (neighbors === 3) state_next = 255
+    else if (neighbors === 2) state_next = state_now
 
-    if (neighbors === 3) state_next = 255;
-    else if (neighbors === 2) state_next = state_now;
+    if (state_now && !state_next) for (const j of neighbor_indices[i]) {
+      neighbor_delta[j]--
+    }
+    else if (!state_now && state_next) for (const j of neighbor_indices[i]) {
+      neighbor_delta[j]++
+    }
 
-    buffer_next[i] = state_next;
-    buffer_next[i + 3] = 255;
+    frame_view[i] = state_next
   }
-  return image_next
+
+  for (let i = 0; i < data_size; i++) neighbor_view[i] += neighbor_delta[i]
+
+  return frame_view.buffer
 }
 
-Comlink.expose({ next_frame, init_worker });
+Comlink.expose({ next_frame, init_worker })
