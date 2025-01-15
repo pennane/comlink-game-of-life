@@ -2,8 +2,8 @@
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d', { willReadFrequently: true })
 
-canvas.width = Math.floor(window.innerWidth * .75)
-canvas.height = Math.floor(window.innerHeight * .75)
+canvas.width = Math.floor(window.innerWidth / 2)
+canvas.height = Math.floor(window.innerHeight / 2)
 
 const image_data = ctx.getImageData(0, 0, canvas.width, canvas.height)
 
@@ -14,7 +14,7 @@ function draw_frame(frame) {
   const frame_view = new Uint8ClampedArray(frame)
   const image_view = image_data.data
 
-  for (let i = 0; i < canvas.width * canvas.height; i++) {
+  for (let i = 0; i < frame_view.length; i++) {
     const red_i = i * 4
     const alpha_i = red_i + 3
     image_view[red_i] = frame_view[i]
