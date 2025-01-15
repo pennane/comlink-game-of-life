@@ -17,7 +17,7 @@ function draw_frame(frame) {
   for (let i = 0; i < canvas.width * canvas.height; i++) {
     const red_i = i * 4
     const alpha_i = red_i + 3
-    image_view[red_i] = frame_view[i] ? 255 : 0
+    image_view[red_i] = frame_view[i]
     image_view[alpha_i] = 255
   }
 
