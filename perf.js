@@ -1,6 +1,3 @@
-
-import * as Comlink from 'https://unpkg.com/comlink/dist/esm/comlink.mjs'
-
 const worker = new Worker('worker.js')
 const { next_frame, init_worker } = Comlink.wrap(worker)
 

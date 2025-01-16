@@ -1,14 +1,13 @@
-importScripts("./dist/umd/comlink.js")
+
+let canvas, ctx, image_data
 
 let frame_view, data_size
 let neighbor_indices, neighbor_view, neighbor_delta
 
-function init_worker(w, h, p) {
+function init_variables(w, h, p) {
   data_size = w * h
 
-  const buffer = crossOriginIsolated
-    ? new SharedArrayBuffer(data_size)
-    : new ArrayBuffer(data_size)
+  const buffer = new ArrayBuffer(data_size)
 
   frame_view = new Uint8ClampedArray(buffer)
 
@@ -78,4 +77,31 @@ function next_frame() {
   return frame_view.buffer
 }
 
-Comlink.expose({ next_frame, init_worker })
+
+function draw_frame(frame) {
+  const frame_view = new Uint8ClampedArray(frame)
+  const image_view = image_data.data
+
+  for (let i = 0; i < frame_view.length; i++) {
+    const red_i = i * 4
+    const alpha_i = red_i + 3
+    image_view[red_i] = frame_view[i]
+    image_view[alpha_i] = 255
+  }
+
+  ctx.putImageData(image_data, 0, 0)
+}
+
+
+function animate() {
+  draw_frame(next_frame())
+  requestAnimationFrame(animate)
+}
+
+onmessage = (evt) => {
+  canvas = evt.data.canvas;
+  ctx = canvas.getContext("2d", { willReadFrequently: true });
+  image_data = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  init_variables(canvas.width, canvas.height, 0.9)
+  animate()
+};
