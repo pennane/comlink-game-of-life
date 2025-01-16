@@ -121,7 +121,11 @@ function next_frame() {
   ctx.putImageData(image_data, 0, 0)
 }
 
-function animate() {
+let last_time
+let fps = 0
+function animate(time) {
+  fps = 1 / ((time - last_time) / 1000)
+  last_time = time
   next_frame()
   requestAnimationFrame(animate)
 }
